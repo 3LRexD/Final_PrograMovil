@@ -81,6 +81,45 @@ class FirstAidView extends GetView<FirstAidController> {
             right: 0,
             child: const ScannerOverlay(),
           ),
+
+          Obx(() {
+            if (controller.diagnostico.value == null) {
+              return const SizedBox.shrink();
+            }
+            
+            return Positioned(
+              top: topInset + 60,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      color: Colors.red,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: const Text(
+                        'CORTADURA 0.54',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 230,
+                      height: 230,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.red, width: 3.5),
+                        color: Colors.transparent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
           //detector de presion larga encima del scanner, debajo del panel
           Positioned(
             top: 0,
@@ -94,10 +133,10 @@ class FirstAidView extends GetView<FirstAidController> {
               onTapCancel: controller.cancelarPresion,
             ),
           ),
-          Positioned(
+         Positioned(
             left: 0, right: 0, bottom: 0,
             child: _BottomPanel(controller: controller, isDark: true),
-          ),
+          ),  
         ],
       );
     });
