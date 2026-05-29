@@ -4,6 +4,7 @@ import '../modules/first_aid/bindings/first_aid_binding.dart';
 import '../modules/first_aid/views/first_aid_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
+import '../modules/first_aid/views/ml_error_view.dart';
 import 'app_routes.dart';
 
 abstract class AppPages {
@@ -17,6 +18,10 @@ abstract class AppPages {
       name: AppRoutes.firstAid,
       page: () => const FirstAidView(),
       binding: FirstAidBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.mlError,
+      page: () => const MlErrorView(),
     ),
   ];
 }

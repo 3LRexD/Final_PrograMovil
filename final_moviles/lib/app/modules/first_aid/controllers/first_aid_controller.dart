@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import '../../../routes/app_routes.dart';
 import '../../../services/sintoma_service.dart';
 
 enum CameraEstado { inicial, cargando, lista, sinPermiso, error }
@@ -45,6 +46,9 @@ class FirstAidController extends GetxController {
   final _tts = FlutterTts();
   bool _sttListo = false;
   Timer? _presionTimer;
+
+  int _cameraDiagnosisCount = 0;
+  int _audioDiagnosisCount = 0;
 
   @override
   void onInit() {
@@ -106,8 +110,13 @@ class FirstAidController extends GetxController {
   void iniciarPresion() {
     _presionTimer?.cancel();
     _presionTimer = Timer(const Duration(seconds: 3), () {
-      diagnostico.value = _diagCamara;
-      hablar(_diagCamara.tratamiento);
+      if (_cameraDiagnosisCount < 1) {
+        diagnostico.value = _diagCamara;
+        hablar(_diagCamara.tratamiento);
+        _cameraDiagnosisCount++;
+      } else {
+        Get.toNamed(AppRoutes.mlError);
+      }
     });
   }
 
@@ -185,9 +194,14 @@ class FirstAidController extends GetxController {
     await _detenerEscucha();
     analizando.value = true;
     try {
-      final res = await sintomas.analizar(texto);
-      diagnostico.value = res;
-      await hablar('${res.causa}. ${res.tratamiento}');
+      if (_audioDiagnosisCount < 1) {
+        final res = await sintomas.analizar(texto);
+        diagnostico.value = res;
+        await hablar('${res.causa}. ${res.tratamiento}');
+        _audioDiagnosisCount++;
+      } else {
+        Get.toNamed(AppRoutes.mlError);
+      }
     } catch (_) {
     } finally {
       analizando.value = false;
