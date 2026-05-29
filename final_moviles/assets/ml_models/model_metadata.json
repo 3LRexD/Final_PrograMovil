@@ -1,0 +1,39 @@
+{
+  "model_name": "YOLOv8-FirstAid-Detector",
+  "version": "1.0.0",
+  "framework": "PyTorch",
+  "model_type": "object-detection",
+  "input_size": [640, 640],
+  "batch_size": 1,
+  "confidence_threshold": 0.45,
+  "classes": [
+    "cortadura",
+    "quemadura",
+    "hematoma",
+    "inflamacion",
+    "sangrado",
+    "fractura_sospechada",
+    "lesion_abierta"
+  ],
+  "class_count": 7,
+  "training_dataset": "FirstAidEmergencyImageset-v2",
+  "total_training_images": 12847,
+  "map50": 0.89,
+  "map50_95": 0.74,
+  "inference_time_ms": 45,
+  "quantized": false,
+  "model_size_mb": 136,
+  "created_date": "2024-11-15",
+  "last_updated": "2025-01-22",
+  "augmentation_techniques": [
+    "horizontal_flip",
+    "vertical_flip",
+    "rotation",
+    "brightness_adjustment",
+    "saturation_adjustment"
+  ],
+  "optimizer": "SGD",
+  "learning_rate": 0.001,
+  "epochs": 300,
+  "device": "cuda:0"
+}

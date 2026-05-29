@@ -6,6 +6,10 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Se necesita la cámara para analizar lesiones y entregar instrucciones de primeros auxilios.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Usamos el micrófono para describir síntomas por voz y recibir asistencia de primeros auxilios.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>El reconocimiento de voz nos permite entender los síntomas que describes.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

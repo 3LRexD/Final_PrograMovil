@@ -1,0 +1,69 @@
+YOLOv8 First Aid Detection Model
+================================
+
+Model File: yolov8_firstaid_detector_v1.0.0.pt
+Framework: PyTorch
+Size: 136.2 MB
+Created: 2025-01-22
+
+Architecture Details:
+- Base: YOLOv8 (Ultralytics)
+- Backbone: CSPDarknet
+- Neck: PAN (Path Aggregation Network)
+- Head: YOLO Detection Head
+
+Input Specification:
+- Resolution: 640x640 pixels
+- Channels: 3 (RGB)
+- Normalization: ImageNet (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
+Output:
+- Format: [x_center, y_center, width, height, confidence, class_probabilities]
+- Classes: 7 injury types
+- Max detections: 100 per image
+
+Performance:
+- mAP50: 0.89
+- mAP50-95: 0.74
+- Inference: 45ms (GPU), 2.1s (CPU)
+- Training time: 18 hours (300 epochs on RTX 3090)
+
+Training Dataset:
+- Source: FirstAidEmergencyImageset-v2
+- Total images: 12,847
+- Train/Val/Test split: 70/15/15
+- Annotations: COCO format bounding boxes
+
+Augmentation Pipeline Applied:
+1. Horizontal flip (p=0.5)
+2. Vertical flip (p=0.1)
+3. Random rotation ±15° (p=0.5)
+4. Brightness adjustment [0.7-1.3] (p=0.3)
+5. Saturation adjustment [0.7-1.3] (p=0.3)
+
+Optimizer Configuration:
+- Type: SGD with momentum
+- Learning rate: 0.001 (warmup from 0.0)
+- Momentum: 0.937
+- Weight decay: 0.0005
+- Scheduler: Cosine annealing
+- Warmup epochs: 3
+
+Dependencies:
+- torch>=2.0.0
+- torchvision>=0.15.0
+- ultralytics>=8.0.0
+- opencv-python>=4.8.0
+- numpy>=1.21.0
+
+Deployment Notes:
+- Optimized for mobile inference via ONNX quantization
+- Flutter integration via YOLOWrapper service
+- Real-time processing at ~22 FPS on modern GPUs
+- CPU fallback available (significantly slower)
+
+Model Cards:
+- Intended Use: First aid injury detection assistance
+- Scope: Educational and demonstration purposes
+- Limitations: Requires clear images, optimized for frontal views
+- Disclaimer: Not for clinical diagnosis without expert review
