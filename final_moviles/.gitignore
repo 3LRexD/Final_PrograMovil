@@ -46,3 +46,6 @@ app.*.map.json
 
 # GetX architecture guide
 /GETX_GUIDE.md
+
+# Secrets
+.env

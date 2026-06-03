@@ -5,12 +5,13 @@ import 'app/modules/onboarding/controllers/onboarding_controller.dart';
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
 import 'app/theme/app_theme.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   await GetStorage.init();
-
+  await dotenv.load(fileName: '.env');
   runApp(const AsistenteApp()); 
 }
 
