@@ -4,10 +4,12 @@ import 'package:camera/camera.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-
+import '../../../services/rag_service.dart';  
+import '../../../services/gemma_service.dart'; 
 import '../../../services/google_tts_service.dart';  
 import '../../../services/sintoma_service.dart';
 import '../../../../services/ml/yolo_wrapper.dart';
+import 'package:flutter/foundation.dart';
 
 enum CameraEstado { inicial, cargando, lista, sinPermiso, error }
 
@@ -26,7 +28,8 @@ class FirstAidController extends GetxController {
   final ultimaDeteccion = Rx<YoloDetection?>(null);
   final mensajeError = ''.obs;
   final torchActivo = false.obs;
-
+  final _ragService = RagService();     
+  final _gemmaService = GemmaService(); 
   final modo = Modo.camara.obs;
 
   final escuchando = false.obs;
@@ -50,6 +53,7 @@ class FirstAidController extends GetxController {
     super.onInit();
     inicializar();
     _yolo.inicializar();
+    _ragService.inicializar();
   }
 
   @override
@@ -253,10 +257,30 @@ class FirstAidController extends GetxController {
     await _detenerEscucha();
     analizando.value = true;
     try {
-      final res = await sintomas.analizar(texto);
-      diagnostico.value = res;
-      await hablar('${res.causa}. ${res.tratamiento}');
-    } catch (_) {
+      List<String> fragmentos = await _ragService.buscarFragmentosRelevantes(texto);
+
+      String respuestaFinal = await _gemmaService.generarRespuesta(
+        pregunta: texto,
+        fragmentosRelevantes: fragmentos,
+      );
+
+      diagnostico.value = Diagnostico(
+        causa: "Consulta respondida",
+        descripcion: "Generado con Gemma IA offline",
+        tratamiento: respuestaFinal,
+        urgencia: 'baja',
+      );
+      
+      await hablar(respuestaFinal);
+
+    } catch (e) {
+      debugPrint("Error procesando con IA: $e");
+      diagnostico.value = Diagnostico(
+        causa: "Error",
+        descripcion: "No se pudo procesar la consulta",
+        tratamiento: "Ocurrió un error al consultar el manual offline.",
+        urgencia: 'alta',
+      );
     } finally {
       analizando.value = false;
     }
