@@ -1,5 +1,5 @@
-//envoltorio para el modelo YOLO v8
-//nota: este es un stub para demostracion, no carga modelos reales
+//envoltorio para el modelo yolo v8
+//este es un stub de prueba no carga el modelo real
 
 import 'dart:typed_data';
 import 'package:get/get.dart';
@@ -54,8 +54,8 @@ class YoloWrapper extends GetxService {
   //inicializar el modelo desde assets
   Future<bool> inicializar() async {
     try {
-      //TODO: aqui cargariamos el modelo real desde assets/ml_models/
-      //por ahora es un stub para showcase
+      //todo aca cargamos el modelo real de assets
+      //por ahora es un stub de muestra
       _modelCargado = true;
       return true;
     } catch (e) {
@@ -69,8 +69,8 @@ class YoloWrapper extends GetxService {
     if (!_modelCargado) return [];
 
     try {
-      //TODO: aqui iria el procesamiento real con el modelo
-      //por ahora retorna lista vacia
+      //todo aca va el procesamiento real del modelo
+      //por ahora devuelve lista vacia
       return [];
     } catch (e) {
       return [];
@@ -82,11 +82,11 @@ class YoloWrapper extends GetxService {
     final detecciones = await inferir(imagenBytes);
     if (detecciones.isEmpty) return null;
 
-    //retorna la deteccion con mayor confianza
+    //devuelve la deteccion con mas confianza
     return detecciones.reduce((a, b) => a.confianza > b.confianza ? a : b);
   }
 
-  //verificar si el modelo esta listo
+  //ver si el modelo esta listo
   bool get listo => _modelCargado;
 
   @override

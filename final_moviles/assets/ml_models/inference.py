@@ -1,7 +1,7 @@
 """
-YOLOv8 First Aid Detection Model - Inference Script
-Framework: PyTorch
-Model: YOLOv8-FirstAid-Detector v1.0.0
+modelo yolo v8 de primeros auxilios script de inferencia
+framework pytorch
+modelo yolov8-firstaid-detector v100
 """
 
 import cv2
@@ -14,18 +14,18 @@ import json
 
 class FirstAidDetector:
     """
-    Wrapper for YOLOv8 first aid detection model.
-    Detects common first aid emergencies from image data.
+    wrapper para el modelo yolo v8
+    detecta emergencias comunes con imagenes
     """
 
     def __init__(self, model_path: str = "yolov8_firstaid_detector_v1.0.0.pt"):
-        """Initialize detector with pre-trained model."""
+        """iniciar detector con modelo entrenado"""
         self.model_path = Path(model_path)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = None
         self.confidence_threshold = 0.45
 
-        # Class names matching training dataset
+        #clases de entrenamiento
         self.class_names = {
             0: "cortadura",
             1: "quemadura",
@@ -37,7 +37,7 @@ class FirstAidDetector:
         }
 
     def load_model(self):
-        """Load YOLO model from disk."""
+        """cargar modelo yolo del disco"""
         if not self.model_path.exists():
             raise FileNotFoundError(f"Model not found: {self.model_path}")
 
@@ -47,13 +47,9 @@ class FirstAidDetector:
 
     def detect(self, image_path: str) -> dict:
         """
-        Run inference on image.
-
-        Args:
-            image_path: Path to input image
-
-        Returns:
-            Dictionary with detections and metadata
+        hacer inferencia en la imagen
+        recibe la ruta de la imagen
+        devuelve las detecciones y la metadata
         """
         if self.model is None:
             self.load_model()
@@ -62,7 +58,7 @@ class FirstAidDetector:
         if image is None:
             raise ValueError(f"Cannot read image: {image_path}")
 
-        # Run inference
+        #correr inferencia
         results = self.model(
             image,
             conf=self.confidence_threshold,
@@ -70,7 +66,7 @@ class FirstAidDetector:
             verbose=False,
         )
 
-        # Parse results
+        #procesar resultados
         detections = []
         for result in results:
             for box in result.boxes:
@@ -78,7 +74,7 @@ class FirstAidDetector:
                 class_id = int(box.cls[0])
                 class_name = self.class_names.get(class_id, "unknown")
 
-                # Extract bounding box coordinates
+                #sacar las coordenadas de la caja
                 x1, y1, x2, y2 = map(float, box.xyxy[0])
                 width = x2 - x1
                 height = y2 - y1
@@ -107,8 +103,8 @@ class FirstAidDetector:
 
     def detect_injury_type(self, image_path: str) -> str:
         """
-        Get the primary injury type from image.
-        Returns the highest confidence detection.
+        saca el tipo de lesion principal
+        devuelve la deteccion con mas confianza
         """
         result = self.detect(image_path)
         if result["detections"]:
@@ -118,13 +114,13 @@ class FirstAidDetector:
 
 
 def main():
-    """Example usage of FirstAidDetector."""
-    # Initialize detector
+    """ejemplo de uso del detector"""
+    #iniciar el detector
     detector = FirstAidDetector()
 
-    # Example: detect injuries in image
-    # injury_type = detector.detect_injury_type("injury_image.jpg")
-    # print(f"Detected injury: {injury_type}")
+    #ejemplo detectar lesiones en imagen
+    #injury_type = detector.detect_injury_type("injury_image.jpg")
+    #print(f"Detected injury: {injury_type}")
 
     print("FirstAidDetector loaded successfully")
     print(f"Available classes: {list(detector.class_names.values())}")

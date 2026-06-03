@@ -18,7 +18,7 @@ class HomeView extends GetView<HomeController> {
           children: [
             const _HeroSection(),
             const SizedBox(height: 20),
-            const TipsCarousel(),
+            TipsCarousel(),
             const SizedBox(height: 8),
             MenuButton(
               icon: Icons.medical_services_rounded,

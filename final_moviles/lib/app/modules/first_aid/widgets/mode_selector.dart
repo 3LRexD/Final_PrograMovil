@@ -47,7 +47,7 @@ class ModeSelector extends StatelessWidget {
               ),
             ),
           ),
-          //tabs encima, llenando todo el espacio
+          //tabs encima llenando todo el espacio
           Positioned.fill(
             child: Row(
               children: [

@@ -13,7 +13,7 @@ enum CameraEstado { inicial, cargando, lista, sinPermiso, error }
 
 enum Modo { camara, microfono }
 
-//diagnostico falso para modo camara (presion larga 3s)
+//diagnostico falso para modo camara presion larga 3s
 const _diagCamara = Diagnostico(
   causa: 'Cortadura leve',
   descripcion: 'Herida superficial con sangrado leve.',
@@ -66,7 +66,7 @@ class FirstAidController extends GetxController {
     super.onClose();
   }
 
-  //camara --------------------------------------
+  //camara
 
   Future<void> inicializar() async {
     estado.value = CameraEstado.cargando;
@@ -106,7 +106,7 @@ class FirstAidController extends GetxController {
 
   Future<void> abrirAjustes() => openAppSettings();
 
-  //presion larga en camara (3s) → diagnostico falso
+  //presion larga en camara de 3s para diagnostico falso
   void iniciarPresion() {
     _presionTimer?.cancel();
     _presionTimer = Timer(const Duration(seconds: 3), () {
@@ -122,7 +122,7 @@ class FirstAidController extends GetxController {
 
   void cancelarPresion() => _presionTimer?.cancel();
 
-  //modo y tts ----------------------------------
+  //modo y tts
 
   Future<void> _initTts() async {
     await _tts.setLanguage('es-MX');
@@ -142,11 +142,11 @@ class FirstAidController extends GetxController {
 
   Future<void> pararAudio() async => _tts.stop();
 
-  //microfono -----------------------------------
+  //microfono
 
   Future<void> toggleEscucha() async {
     if (escuchando.value) {
-      //el usuario para: procesamos lo que se capturó
+      //el usuario para asi procesamos lo que se grabo
       final texto = textoEscuchado.value;
       await _detenerEscucha();
       if (texto.isNotEmpty) _procesarSintoma(texto);
@@ -159,7 +159,7 @@ class FirstAidController extends GetxController {
     if (!_sttListo) {
       _sttListo = await _stt.initialize(
         onStatus: (status) {
-          //si el os para por silencio, sincronizamos el estado
+          //si el sistema para por silencio sincronizamos el estado
           if ((status == 'done' || status == 'notListening') &&
               escuchando.value) {
             escuchando.value = false;
@@ -175,7 +175,7 @@ class FirstAidController extends GetxController {
     await _stt.listen(
       onResult: (result) {
         textoEscuchado.value = result.recognizedWords;
-        //no auto-procesar, el usuario toca para parar
+        //no procesar solo el usuario para con tap
       },
       listenOptions: SpeechListenOptions(
         localeId: 'es-MX',
