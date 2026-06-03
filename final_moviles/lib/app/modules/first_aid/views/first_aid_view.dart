@@ -7,7 +7,6 @@ import '../widgets/diagnosis_card.dart';
 import '../widgets/mic_panel.dart';
 import '../widgets/mode_selector.dart';
 import '../widgets/permission_message.dart';
-import '../widgets/scanner_overlay.dart';
 
 class FirstAidView extends GetView<FirstAidController> {
   const FirstAidView({super.key});
@@ -58,7 +57,7 @@ class FirstAidView extends GetView<FirstAidController> {
     return Obx(() {
       if (controller.modo.value == Modo.microfono) {
         return ColoredBox(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.background,
           child: Column(
             children: [
               SizedBox(height: topInset),
@@ -74,65 +73,27 @@ class FirstAidView extends GetView<FirstAidController> {
         fit: StackFit.expand,
         children: [
           CameraPreview(cam),
-          Positioned(
-            top: topInset,
-            bottom: 220,
-            left: 0,
-            right: 0,
-            child: const ScannerOverlay(),
-          ),
-
           Obx(() {
-            if (controller.diagnostico.value == null) {
-              return const SizedBox.shrink();
-            }
-            
-            return Positioned(
-              top: topInset + 60,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      color: Colors.red,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: const Text(
-                        'CORTADURA 0.54',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      width: 230,
-                      height: 230,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.red, width: 3.5),
-                        color: Colors.transparent,
-                      ),
-                    ),
-                  ],
-                ),
+            final det = controller.ultimaDeteccion.value;
+            if (det == null) return const SizedBox.shrink();
+
+            final size = MediaQuery.of(context).size;
+            final camH = size.height - topInset - 220;
+            final bb   = det.boundingBox;
+
+            final left = (bb.x     * size.width).clamp(0.0, size.width  - 4);
+            final top  = (topInset + bb.y * camH).clamp(topInset, topInset + camH - 4);
+            final boxW = (bb.ancho * size.width).clamp(4.0, size.width);
+            final boxH = (bb.alto  * camH).clamp(4.0, camH);
+
+            return CustomPaint(
+              painter: _DetectionBoxPainter(
+                Rect.fromLTWH(left, top, boxW, boxH),
+                Theme.of(context).colorScheme.error,
               ),
+              child: const SizedBox.expand(),
             );
           }),
-          //detector de presion larga encima del scanner debajo del panel
-          Positioned(
-            top: 0,
-            bottom: 220,
-            left: 0,
-            right: 0,
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTapDown: (_) => controller.iniciarPresion(),
-              onTapUp: (_) => controller.cancelarPresion(),
-              onTapCancel: controller.cancelarPresion,
-            ),
-          ),
          Positioned(
             left: 0, right: 0, bottom: 0,
             child: _BottomPanel(controller: controller, isDark: true),
@@ -154,14 +115,27 @@ class _AppBarReactivo extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Obx(() {
       final isMic = controller.modo.value == Modo.microfono;
       return AppBar(
         backgroundColor:
-            isMic ? const Color(0xFF1976D2) : Colors.transparent,
-        foregroundColor: Colors.white,
+            isMic ? theme.colorScheme.surface : Colors.transparent,
+        foregroundColor: isMic ? theme.colorScheme.primary : theme.colorScheme.secondary,
         elevation: 0,
-        title: const Text('Primeros Auxilios'),
+        shape: isMic 
+          ? Border(
+              bottom: BorderSide(color: theme.colorScheme.secondary, width: 2),
+            ) 
+          : null,
+        title: Text(
+          isMic ? 'CONEXIÓN DE AUDIO ESTABLECIDA' : 'ESCÁNER MÉDICO ACTIVO',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.0,
+          ),
+        ),
         actions: [
           if (!isMic)
             Obx(() => IconButton(
@@ -170,6 +144,7 @@ class _AppBarReactivo extends StatelessWidget implements PreferredSizeWidget {
                       : Icons.flashlight_off_rounded),
                   onPressed: controller.toggleTorch,
                   tooltip: 'Linterna',
+                  color: controller.torchActivo.value ? theme.colorScheme.primary : theme.colorScheme.secondary,
                 )),
         ],
       );
@@ -192,10 +167,10 @@ class _BottomPanel extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
-                colors: [Colors.black87, Colors.transparent],
+                colors: [Colors.black, Colors.transparent],
               ),
             )
-          : const BoxDecoration(color: Colors.white),
+          : BoxDecoration(color: Theme.of(context).colorScheme.surface),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -221,7 +196,7 @@ class _BottomPanel extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: controller.pararAudio,
+                    onTap: controller.toggleAudio,
                     child: Container(
                       padding: const EdgeInsets.all(11),
                       decoration: BoxDecoration(
@@ -230,8 +205,9 @@ class _BottomPanel extends StatelessWidget {
                             : Colors.grey.shade200,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.stop_rounded,
-                          size: 20, color: Colors.black87),
+                      child: Obx(() => Icon(
+                          controller.hablando.value ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                          size: 20, color: Colors.black87)),
                     ),
                   ),
                 ],
@@ -248,7 +224,7 @@ class _BottomPanel extends StatelessWidget {
           const SizedBox(height: 10),
 
           //etiqueta de estado
-          _StatusLabel(controller: controller, isDark: isDark),
+          _StatusLabel(controller: controller),
         ],
       ),
     );
@@ -256,51 +232,70 @@ class _BottomPanel extends StatelessWidget {
 }
 
 class _StatusLabel extends StatelessWidget {
-  const _StatusLabel({required this.controller, required this.isDark});
+  const _StatusLabel({required this.controller});
 
   final FirstAidController controller;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final textColor = isDark ? Colors.white70 : Colors.black54;
-      final emTextColor = isDark ? Colors.white : Colors.black87;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: ShapeDecoration(
+        color: Colors.black.withValues(alpha: 0.65),
+        shape: BeveledRectangleBorder(
+          side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5), width: 1),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(10),
+            topRight: Radius.circular(10),
+          ),
+        ),
+      ),
+      child: Obx(() {
+        const textColor = Colors.white70;
+        const emTextColor = Colors.white;
 
-      if (controller.modo.value == Modo.microfono) {
-        if (controller.analizando.value) {
+        if (controller.modo.value == Modo.microfono) {
+          if (controller.analizando.value) {
+            return _InfoRow(
+              icon: Icons.hourglass_top_rounded,
+              texto: 'Analizando síntomas...',
+              textColor: textColor,
+            );
+          }
+          if (controller.escuchando.value &&
+              controller.textoEscuchado.value.isNotEmpty) {
+            return Text(
+              '"${controller.textoEscuchado.value}"',
+              style: TextStyle(
+                color: emTextColor,
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+            );
+          }
           return _InfoRow(
-            icon: Icons.hourglass_top_rounded,
-            texto: 'Analizando síntomas...',
+            icon: Icons.mic_none_rounded,
+            texto: 'Toca el micrófono y describe los síntomas',
             textColor: textColor,
           );
         }
-        if (controller.escuchando.value &&
-            controller.textoEscuchado.value.isNotEmpty) {
-          return Text(
-            '"${controller.textoEscuchado.value}"',
-            style: TextStyle(
-              color: emTextColor,
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-            maxLines: 2,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
+        if (controller.analizando.value) {
+          return _InfoRow(
+            icon: Icons.radar_rounded,
+            texto: 'Escaneando...',
+            textColor: textColor,
           );
         }
         return _InfoRow(
-          icon: Icons.mic_none_rounded,
-          texto: 'Toca el micrófono y describe los síntomas',
+          icon: Icons.health_and_safety,
+          texto: 'Escaneo automático activo',
           textColor: textColor,
         );
-      }
-      return _InfoRow(
-        icon: Icons.health_and_safety,
-        texto: 'Mantén presionado 3 s para ver un diagnóstico',
-        textColor: textColor,
-      );
-    });
+      }),
+    );
   }
 }
 
@@ -318,15 +313,16 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
           padding: const EdgeInsets.all(5),
           decoration: BoxDecoration(
-            color: Colors.blue.withValues(alpha: 0.8),
+            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.25),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: Colors.white, size: 15),
+          child: Icon(icon, color: Theme.of(context).colorScheme.secondary, size: 15),
         ),
         const SizedBox(width: 8),
         Flexible(
@@ -335,4 +331,57 @@ class _InfoRow extends StatelessWidget {
       ],
     );
   }
+}
+
+//dibuja el cuadro de deteccion con las esquinas recortadas
+class _DetectionBoxPainter extends CustomPainter {
+  const _DetectionBoxPainter(this.box, this.color);
+
+  final Rect box;
+  final Color color;
+
+  static const _arm = 20.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 3.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.square;
+
+    final l  = box.left;
+    final t  = box.top;
+    final r  = box.right;
+    final b  = box.bottom;
+    const arm = _arm;
+
+    //arriba izquierda
+    canvas.drawLine(Offset(l, t + arm), Offset(l, t), paint);
+    canvas.drawLine(Offset(l, t), Offset(l + arm, t), paint);
+
+    //arriba derecha
+    canvas.drawLine(Offset(r - arm, t), Offset(r, t), paint);
+    canvas.drawLine(Offset(r, t), Offset(r, t + arm), paint);
+
+    //abajo derecha
+    canvas.drawLine(Offset(r, b - arm), Offset(r, b), paint);
+    canvas.drawLine(Offset(r, b), Offset(r - arm, b), paint);
+
+    //abajo izquierda
+    canvas.drawLine(Offset(l + arm, b), Offset(l, b), paint);
+    canvas.drawLine(Offset(l, b), Offset(l, b - arm), paint);
+    
+    //mira en el centro
+    final cx = box.center.dx;
+    final cy = box.center.dy;
+    final crossPaint = Paint()
+      ..color = color.withOpacity(0.5)
+      ..strokeWidth = 1.5;
+    canvas.drawLine(Offset(cx - 15, cy), Offset(cx + 15, cy), crossPaint);
+    canvas.drawLine(Offset(cx, cy - 15), Offset(cx, cy + 15), crossPaint);
+  }
+
+  @override
+  bool shouldRepaint(_DetectionBoxPainter old) => old.box != box;
 }

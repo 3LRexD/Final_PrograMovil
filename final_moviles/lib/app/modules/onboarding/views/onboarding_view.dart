@@ -100,7 +100,7 @@ class _OnboardingPageItem extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Imagen
+          //imagen
           SizedBox(
             height: size.height * 0.38,
             child: Image.asset(
@@ -115,7 +115,7 @@ class _OnboardingPageItem extends StatelessWidget {
 
           const SizedBox(height: 40),
 
-          // Título
+          //titulo
           Text(
             page.title,
             textAlign: TextAlign.center,
@@ -128,7 +128,7 @@ class _OnboardingPageItem extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Descripción
+          //descripcion
           Text(
             page.description,
             textAlign: TextAlign.center,
@@ -166,11 +166,11 @@ class _DotIndicator extends StatelessWidget {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: isActive ? 24 : 8,
-          height: 8,
+          width: isActive ? 32 : 12,
+          height: 6,
           decoration: BoxDecoration(
             color: isActive ? activeColor : inactiveColor,
-            borderRadius: BorderRadius.circular(4),
+            shape: BoxShape.rectangle,//barras rectangulares en vez de puntos
           ),
         );
       }),
@@ -217,9 +217,7 @@ class _ActionButtons extends StatelessWidget {
             backgroundColor: primaryColor,
             foregroundColor: onPrimaryColor,
             elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
+            shape: const BeveledRectangleBorder(),
           ),
           child: Text(
             isLastPage ? 'Empezar' : 'Siguiente',
@@ -248,7 +246,7 @@ class _ImagePlaceholder extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(24),
+        shape: BoxShape.rectangle,
       ),
       child: Center(
         child: Icon(

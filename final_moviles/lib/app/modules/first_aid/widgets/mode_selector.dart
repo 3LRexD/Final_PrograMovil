@@ -14,11 +14,24 @@ class ModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       height: 46,
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(23),
+      decoration: ShapeDecoration(
+        color: theme.colorScheme.surface,
+        shape: const BeveledRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(14),
+            topRight: Radius.circular(14),
+          ),
+        ),
+        shadows: [
+          BoxShadow(
+            color: theme.colorScheme.secondary.withValues(alpha: 0.2),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
       ),
       child: Stack(
         children: [
@@ -33,16 +46,14 @@ class ModeSelector extends StatelessWidget {
               widthFactor: 0.5,
               child: Container(
                 margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(19),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
+                decoration: ShapeDecoration(
+                  color: theme.colorScheme.primary,
+                  shape: const BeveledRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(10),
+                      topRight: Radius.circular(10),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -56,12 +67,14 @@ class ModeSelector extends StatelessWidget {
                   label: 'Cámara',
                   activo: modoActual == Modo.camara,
                   onTap: () => onCambiar(Modo.camara),
+                  theme: theme,
                 ),
                 _Tab(
                   icon: Icons.mic_rounded,
                   label: 'Micrófono',
                   activo: modoActual == Modo.microfono,
                   onTap: () => onCambiar(Modo.microfono),
+                  theme: theme,
                 ),
               ],
             ),
@@ -78,16 +91,18 @@ class _Tab extends StatelessWidget {
     required this.label,
     required this.activo,
     required this.onTap,
+    required this.theme,
   });
 
   final IconData icon;
   final String label;
   final bool activo;
   final VoidCallback onTap;
+  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
-    final color = activo ? Colors.black87 : Colors.white70;
+    final color = activo ? Colors.black : theme.colorScheme.secondary;
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,

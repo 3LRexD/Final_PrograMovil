@@ -28,14 +28,7 @@ class HomeView extends GetView<HomeController> {
               color: AppTheme.secondary,
               onTap: controller.abrirPrimerosAuxilios,
             ),
-            MenuButton(
-              icon: Icons.map_rounded,
-              title: 'Navegación',
-              subtitle: 'Próximamente disponible.',
-              color: AppTheme.secondary,
-              onTap: controller.abrirNavegacion,
-              enabled: false,
-            ),
+
             const SizedBox(height: 16),
           ],
         ),
@@ -49,17 +42,16 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF0D47A1), Color(0xFF1976D2), Color(0xFF42A5F5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(36),
-          bottomRight: Radius.circular(36),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary,//amarillo vibrante
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.secondary,//borde celeste abajo
+            width: 4,
+          ),
         ),
       ),
       child: SafeArea(
@@ -72,17 +64,23 @@ class _HeroSection extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Ícono principal (sin cambios)
+                  //icono principal
                   Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
+                    padding: const EdgeInsets.all(12),
+                    decoration: ShapeDecoration(
+                      color: Colors.black.withValues(alpha: 0.8),
+                      shape: BeveledRectangleBorder(
+                        side: BorderSide(color: theme.colorScheme.error, width: 2),
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(12),
+                          topRight: Radius.circular(12),
+                        ),
+                      ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.local_hospital_rounded,
-                      color: Colors.white,
-                      size: 40,
+                      color: theme.colorScheme.error,//icono rojo
+                      size: 42,
                     ),
                   ),
 
@@ -92,16 +90,21 @@ class _HeroSection extends StatelessWidget {
                     message: 'Ver tutorial',
                     child: InkWell(
                       onTap: OnboardingController.resetOnboarding,
-                      borderRadius: BorderRadius.circular(30),
                       child: Container(
                         padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
+                        decoration: ShapeDecoration(
+                          color: Colors.black.withValues(alpha: 0.8),
+                          shape: BeveledRectangleBorder(
+                            side: BorderSide(color: theme.colorScheme.secondary, width: 1.5),
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                            ),
+                          ),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.help_outline_rounded,
-                          color: Colors.white,
+                          color: theme.colorScheme.secondary,
                           size: 22,
                         ),
                       ),
@@ -110,22 +113,23 @@ class _HeroSection extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 20),
-              const Text(
-                'Asistente de\nEmergencias',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
+              const SizedBox(height: 24),
+              Text(
+                'TRAUMA TEAM',
+                style: theme.textTheme.displaySmall?.copyWith(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1.0,
+                  height: 1.0,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                '¿En qué te podemos ayudar hoy?',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 15,
+                'ASISTENCIA MÉDICA DE EMERGENCIA',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: Colors.black87,
+                  letterSpacing: 2.0,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
