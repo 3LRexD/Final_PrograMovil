@@ -20,61 +20,83 @@ class MenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = enabled ? color : Colors.grey.shade400;
+    final effectiveColor = enabled ? color : Colors.grey.shade700;
+    final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        elevation: enabled ? 6 : 2,
-        shadowColor: effectiveColor.withValues(alpha: 0.3),
+        color: Colors.transparent,
         child: InkWell(
           onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(22),
-            child: Row(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: effectiveColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(icon, color: effectiveColor, size: 32),
+          splashColor: effectiveColor.withValues(alpha: 0.2),
+          highlightColor: effectiveColor.withValues(alpha: 0.1),
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: ShapeDecoration(
+              color: theme.colorScheme.surface,
+              shape: BeveledRectangleBorder(
+                side: BorderSide(color: effectiveColor, width: 1.5),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
                 ),
-                const SizedBox(width: 18),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: enabled ? Colors.black87 : Colors.grey,
-                        ),
+              ),
+              shadows: enabled
+                  ? [
+                      BoxShadow(
+                        color: effectiveColor.withValues(alpha: 0.15),
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      )
+                    ]
+                  : null,
+            ),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(width: 4, color: effectiveColor),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Row(
+                        children: [
+                          Icon(icon, color: effectiveColor, size: 36),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  title.toUpperCase(),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: enabled ? Colors.white : Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  subtitle,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: enabled ? Colors.white70 : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            enabled ? Icons.chevron_right_rounded : Icons.lock_outline,
+                            color: effectiveColor,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: enabled ? Colors.black45 : Colors.grey.shade400,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                Icon(
-                  enabled ? Icons.arrow_forward_ios_rounded : Icons.lock_outline_rounded,
-                  color: effectiveColor,
-                  size: 18,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

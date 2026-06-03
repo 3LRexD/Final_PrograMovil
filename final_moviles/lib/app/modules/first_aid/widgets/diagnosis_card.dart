@@ -17,41 +17,48 @@ class DiagnosisCard extends StatelessWidget {
   Color get _color {
     switch (diagnostico.urgencia) {
       case 'alta':
-        return const Color(0xFFE53935);
+        return const Color(0xFFFF0033);//rojo neon
       case 'media':
-        return const Color(0xFFFF8F00);
+        return const Color(0xFFF3E600);//amarillo neon
       default:
-        return const Color(0xFF43A047);
+        return const Color(0xFF00E6E6);//celeste neon
     }
   }
 
   String get _etiqueta {
     switch (diagnostico.urgencia) {
       case 'alta':
-        return 'Urgencia alta';
+        return 'URGENCIA ALTA';
       case 'media':
-        return 'Urgencia media';
+        return 'URGENCIA MEDIA';
       default:
-        return 'Urgencia baja';
+        return 'URGENCIA BAJA';
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: () => _abrirDetalle(context),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.96),
-          borderRadius: BorderRadius.circular(16),
+        decoration: ShapeDecoration(
+          color: theme.colorScheme.surface,
+          shape: BeveledRectangleBorder(
+            side: BorderSide(color: _color, width: 1.5),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+            ),
+          ),
         ),
         child: Row(
           children: [
             Container(
               width: 10,
               height: 10,
-              decoration: BoxDecoration(color: _color, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: _color, shape: BoxShape.rectangle),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -59,20 +66,20 @@ class DiagnosisCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    diagnostico.causa,
+                    diagnostico.causa.toUpperCase(),
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 13),
+                        fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     'Toca para ver el tratamiento',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.keyboard_arrow_up_rounded, color: Colors.grey),
+            const Icon(Icons.keyboard_arrow_up_rounded, color: Colors.white70),
           ],
         ),
       ),
@@ -109,14 +116,15 @@ class _DetalleSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return DraggableScrollableSheet(
       initialChildSize: 0.62,
       minChildSize: 0.4,
       maxChildSize: 0.95,
       builder: (context, scroll) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.background,
+          border: Border(top: BorderSide(color: color, width: 3)),
         ),
         child: ListView(
           controller: scroll,
@@ -124,11 +132,10 @@ class _DetalleSheet extends StatelessWidget {
           children: [
             Center(
               child: Container(
-                width: 40,
+                width: 50,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
+                  color: Colors.white24,
                 ),
               ),
             ),
@@ -139,85 +146,89 @@ class _DetalleSheet extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
+                    color: color.withValues(alpha: 0.15),
+                    border: Border.all(color: color, width: 1),
                   ),
                   child: Text(
                     etiqueta,
                     style: TextStyle(
                         color: color,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
                         fontSize: 12),
                   ),
                 ),
                 const Spacer(),
-                TextButton.icon(
-                  onPressed: Get.find<FirstAidController>().pararAudio,
-                  icon: const Icon(Icons.stop_rounded, size: 16),
-                  label: const Text('Detener audio'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red.shade400,
-                    textStyle: const TextStyle(fontSize: 12),
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                ),
+                Obx(() {
+                  final hablando = Get.find<FirstAidController>().hablando.value;
+                  return TextButton.icon(
+                    onPressed: Get.find<FirstAidController>().toggleAudio,
+                    icon: Icon(hablando ? Icons.stop_rounded : Icons.play_arrow_rounded, size: 16),
+                    label: Text(hablando ? 'DETENER AUDIO' : 'REPRODUCIR AUDIO'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: hablando ? theme.colorScheme.error : theme.colorScheme.primary,
+                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  );
+                }),
               ],
             ),
             const SizedBox(height: 14),
             Text(
-              diagnostico.causa,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              diagnostico.causa.toUpperCase(),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 8),
             Text(
               diagnostico.descripcion,
               style: const TextStyle(
-                  fontSize: 14, color: Colors.black54, height: 1.5),
+                  fontSize: 15, color: Colors.white70, height: 1.5),
             ),
 
-            //transcripcion del microfono si existe
             if (transcripcion != null && transcripcion!.isNotEmpty) ...[
               const SizedBox(height: 20),
               const Text(
-                'Lo que describiste',
+                'ENTRADA REGISTRADA',
                 style:
-                    TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 1.0),
               ),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white10,
+                  border: Border(left: BorderSide(color: theme.colorScheme.secondary, width: 3)),
                 ),
                 child: Text(
                   '"$transcripcion"',
                   style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       fontStyle: FontStyle.italic,
-                      color: Colors.black54),
+                      color: Colors.white70),
                 ),
               ),
             ],
 
             const SizedBox(height: 24),
             const Text(
-              'Tratamiento sugerido',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              'TRATAMIENTO RECOMENDADO',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 1.0),
             ),
             const SizedBox(height: 10),
             Text(
               diagnostico.tratamiento,
-              style: const TextStyle(fontSize: 14, height: 1.7),
+              style: const TextStyle(fontSize: 15, height: 1.7, color: Colors.white),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
             Text(
-              'Esta información es orientativa. Si los síntomas persisten o empeoran, consulta a un médico.',
+              'ADVERTENCIA: Esta información es orientativa. Busque asistencia médica profesional inmediatamente si los síntomas persisten.',
               style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey.shade500,
-                  fontStyle: FontStyle.italic),
+                  color: theme.colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5),
             ),
           ],
         ),
@@ -225,3 +236,4 @@ class _DetalleSheet extends StatelessWidget {
     );
   }
 }
+

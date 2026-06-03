@@ -24,9 +24,9 @@ class AsistenteApp extends StatelessWidget {
         ? AppRoutes.onboarding
         : AppRoutes.home;
     return GetMaterialApp(
-      title: 'Asistente de Emergencias',
+      title: 'Trauma Team',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light, 
+      theme: AppTheme.cyberpunk, 
       initialRoute: rutaInicial, 
       getPages: AppPages.pages, 
     );

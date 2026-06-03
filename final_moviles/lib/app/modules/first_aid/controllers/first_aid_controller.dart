@@ -1,33 +1,30 @@
-import 'dart:async';
+import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
-import '../../../routes/app_routes.dart';
 import '../../../services/google_tts_service.dart';  
 import '../../../services/sintoma_service.dart';
+import '../../../../services/ml/yolo_wrapper.dart';
 
 enum CameraEstado { inicial, cargando, lista, sinPermiso, error }
 
 enum Modo { camara, microfono }
 
-const _diagCamara = Diagnostico(
-  causa: 'Cortadura leve',
-  descripcion: 'Herida superficial con sangrado leve.',
-  tratamiento:
-      'Limpia la herida con agua y jabón, aplica presión suave para detener cualquier sangrado, coloca una crema antiséptica o pomada antibiótica si tienes a mano, y cúbrela con una venda o curita. Si no para de sangrar o la cortada es muy profunda, ve al médico.',
-  urgencia: 'baja',
-);
 
 class FirstAidController extends GetxController {
   FirstAidController({required this.sintomas});
 
   final SintomaService sintomas;
+  final _yolo = YoloWrapper();
+
+  bool get modeloListo => _yolo.listo;
 
   CameraController? cameraController;
   final estado = CameraEstado.inicial.obs;
+  final ultimaDeteccion = Rx<YoloDetection?>(null);
   final mensajeError = ''.obs;
   final torchActivo = false.obs;
 
@@ -40,25 +37,29 @@ class FirstAidController extends GetxController {
 
   final _stt = SpeechToText();
   bool _sttListo = false;
-  Timer? _presionTimer;
+  bool _escaneando = false;
+  bool _loopActivo = false;
+  String? _ultimaClaseHablada;
 
   final _tts = GoogleTtsService.instance;
 
-  int _cameraDiagnosisCount = 0;
-  int _audioDiagnosisCount = 0;
+  final hablando = false.obs;
+  String _ultimoTextoHablado = '';
 
   @override
   void onInit() {
     super.onInit();
     inicializar();
+    _yolo.inicializar();
   }
 
   @override
   void onClose() {
-    _presionTimer?.cancel();
+    _escaneando = false;
     _stt.stop();
     _tts.stop();       
     cameraController?.dispose();
+    _yolo.onClose();
     super.onClose();
   }
 
@@ -87,6 +88,7 @@ class FirstAidController extends GetxController {
       );
       await cameraController!.initialize();
       estado.value = CameraEstado.lista;
+      _iniciarScanAutomatico();
     } catch (e) {
       mensajeError.value = 'No se pudo iniciar la cámara: $e';
       estado.value = CameraEstado.error;
@@ -103,23 +105,84 @@ class FirstAidController extends GetxController {
 
   Future<void> abrirAjustes() => openAppSettings();
 
-  void iniciarPresion() {
-    _presionTimer?.cancel();
-    _presionTimer = Timer(const Duration(seconds: 3), () {
-      if (_cameraDiagnosisCount < 1) {
-        diagnostico.value = _diagCamara;
-        hablar(_diagCamara.tratamiento);  
-        _cameraDiagnosisCount++;
-      } else {
-        Get.toNamed(AppRoutes.mlError);
-      }
-    });
+  //escaneo continuo procesa frame por frame segun la velocidad del dispositivo
+  void _iniciarScanAutomatico() {
+    _escaneando = true;
+    if (_loopActivo) return;//ya hay un loop corriendo
+    _loopActivo = true;
+    _loopScan();
   }
 
-  void cancelarPresion() => _presionTimer?.cancel();
+  void _detenerScan() => _escaneando = false;
+
+  Future<void> _loopScan() async {
+    while (_escaneando) {
+      await _escanear();
+    }
+    _loopActivo = false;
+  }
+
+  Future<void> _escanear() async {
+    if (cameraController?.value.isInitialized != true) return;
+    if (modo.value != Modo.camara) return;
+
+    analizando.value = true;
+    try {
+      final foto = await cameraController!.takePicture();
+      final bytes = await foto.readAsBytes();
+      //el modelo corre en isolate para no trabar la ui
+      final deteccion = await _yolo.detectarLesion(bytes);
+      //borra el archivo temporal para que no llene el disco
+      File(foto.path).delete().ignore();
+
+      if (deteccion != null) {
+        ultimaDeteccion.value = deteccion;
+        diagnostico.value = _diagDesdeDeteccion(deteccion);
+        //solo habla si cambia la lesion
+        if (deteccion.clase != _ultimaClaseHablada) {
+          _ultimaClaseHablada = deteccion.clase;
+          final claseLimpia = deteccion.clase.replaceAll('_', ' ');
+          hablar(
+            '$claseLimpia, confianza ${(deteccion.confianza * 100).toStringAsFixed(0)} por ciento',
+          );
+        }
+      } else {
+        ultimaDeteccion.value = null;
+        diagnostico.value = null;
+        //no borra el ultimo hablado para no repetirse
+      }
+    } catch (_) {
+    } finally {
+      analizando.value = false;
+    }
+  }
+
+  Diagnostico _diagDesdeDeteccion(YoloDetection d) {
+    final conf = (d.confianza * 100).toStringAsFixed(1);
+    final bb = d.boundingBox;
+    final claseLimpia = d.clase.replaceAll('_', ' ');
+    return Diagnostico(
+      causa: claseLimpia,
+      descripcion: 'Lesión detectada · Confianza: $conf%',
+      tratamiento:
+          'Clase: $claseLimpia\n'
+          'Confianza: $conf%\n'
+          'Bbox — x: ${bb.x.toStringAsFixed(3)}, y: ${bb.y.toStringAsFixed(3)}, '
+          'w: ${bb.ancho.toStringAsFixed(3)}, h: ${bb.alto.toStringAsFixed(3)}',
+      urgencia: 'baja',
+    );
+  }
 
   Future<void> hablar(String texto) => _tts.speak(texto);
   Future<void> pararAudio() => _tts.stop();
+  Future<void> _initTts() async {
+    await _tts.setLanguage('es-MX');
+    await _tts.setSpeechRate(0.45);
+    await _tts.setPitch(1.0);
+    _tts.setStartHandler(() => hablando.value = true);
+    _tts.setCompletionHandler(() => hablando.value = false);
+    _tts.setCancelHandler(() => hablando.value = false);
+  }
 
   void cambiarModo(Modo nuevo) {
     if (modo.value == nuevo) return;
@@ -127,11 +190,36 @@ class FirstAidController extends GetxController {
     _tts.stop();
     diagnostico.value = null;
     textoEscuchado.value = '';
+    ultimaDeteccion.value = null;
+    _ultimaClaseHablada = null;
     modo.value = nuevo;
+    if (nuevo == Modo.camara) {
+      _iniciarScanAutomatico();
+    } else {
+      _detenerScan();
+    }
   }
+
+  Future<void> hablar(String texto) async {
+    _ultimoTextoHablado = texto;
+    await _tts.speak(texto);
+  }
+
+  Future<void> pararAudio() async => _tts.stop();
+
+  Future<void> toggleAudio() async {
+    if (hablando.value) {
+      await _tts.stop();
+    } else if (_ultimoTextoHablado.isNotEmpty) {
+      await hablar(_ultimoTextoHablado);
+    }
+  }
+
+  //microfono
 
   Future<void> toggleEscucha() async {
     if (escuchando.value) {
+      //el usuario frena la grabacion asi procesamos
       final texto = textoEscuchado.value;
       await _detenerEscucha();
       if (texto.isNotEmpty) _procesarSintoma(texto);
@@ -144,6 +232,7 @@ class FirstAidController extends GetxController {
     if (!_sttListo) {
       _sttListo = await _stt.initialize(
         onStatus: (status) {
+          //si se apaga por silencio actualiza el estado
           if ((status == 'done' || status == 'notListening') &&
               escuchando.value) {
             escuchando.value = false;
@@ -159,6 +248,7 @@ class FirstAidController extends GetxController {
     await _stt.listen(
       onResult: (result) {
         textoEscuchado.value = result.recognizedWords;
+        //no procesa aca el usuario tiene que tocar de nuevo
       },
       listenOptions: SpeechListenOptions(
         localeId: 'es-MX',
@@ -177,14 +267,9 @@ class FirstAidController extends GetxController {
     await _detenerEscucha();
     analizando.value = true;
     try {
-      if (_audioDiagnosisCount < 1) {
-        final res = await sintomas.analizar(texto);
-        diagnostico.value = res;
-        await hablar('${res.causa}. ${res.tratamiento}');  // ← Google TTS
-        _audioDiagnosisCount++;
-      } else {
-        Get.toNamed(AppRoutes.mlError);
-      }
+      final res = await sintomas.analizar(texto);
+      diagnostico.value = res;
+      await hablar('${res.causa}. ${res.tratamiento}');  // ← Google TTS
     } catch (_) {
     } finally {
       analizando.value = false;

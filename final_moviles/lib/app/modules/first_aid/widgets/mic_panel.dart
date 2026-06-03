@@ -15,7 +15,7 @@ class MicPanelController extends GetxController
       vsync: this,
       duration: const Duration(milliseconds: 750),
     )..repeat(reverse: true);
-    scale = Tween<double>(begin: 0.92, end: 1.1).animate(
+    scale = Tween<double>(begin: 0.95, end: 1.08).animate(
       CurvedAnimation(parent: pulse, curve: Curves.easeInOut),
     );
   }
@@ -35,6 +35,7 @@ class MicPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Obx(() {
         final escuchando = controller.escuchando.value;
@@ -52,48 +53,58 @@ class MicPanel extends StatelessWidget {
                 child: Container(
                   width: 84,
                   height: 84,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: escuchando ? Colors.redAccent : Colors.white,
-                    border: Border.all(
-                      color: escuchando
-                          ? Colors.redAccent
-                          : const Color(0xFF1976D2),
-                      width: 2.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (escuchando
-                                ? Colors.red
-                                : const Color(0xFF1976D2))
-                            .withValues(alpha: 0.25),
-                        blurRadius: escuchando ? 28 : 10,
-                        spreadRadius: escuchando ? 4 : 1,
+                  decoration: ShapeDecoration(
+                    color: escuchando ? theme.colorScheme.error : Colors.transparent,
+                    shape: BeveledRectangleBorder(
+                      side: BorderSide(
+                        color: escuchando
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.secondary,
+                        width: 3.0,
                       ),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(22),
+                        topRight: Radius.circular(22),
+                      ),
+                    ),
+                    shadows: [
+                      if (escuchando)
+                        BoxShadow(
+                          color: theme.colorScheme.error.withValues(alpha: 0.4),
+                          blurRadius: 28,
+                          spreadRadius: 4,
+                        )
+                      else
+                        BoxShadow(
+                          color: theme.colorScheme.secondary.withValues(alpha: 0.15),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        ),
                     ],
                   ),
                   child: Icon(
                     escuchando ? Icons.mic : Icons.mic_none_rounded,
                     size: 38,
-                    color: escuchando ? Colors.white : const Color(0xFF1976D2),
+                    color: escuchando ? Colors.black : theme.colorScheme.secondary,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Text(
                 analizando
-                    ? 'Analizando...'
+                    ? 'ANALIZANDO...'
                     : escuchando
-                        ? 'Escuchando...'
-                        : 'Toca para hablar',
+                        ? 'ESCUCHANDO...'
+                        : 'TOCA PARA HABLAR',
                 key: ValueKey(analizando ? 'a' : escuchando ? 'e' : 'i'),
                 style: TextStyle(
-                  color: escuchando ? Colors.redAccent : Colors.black54,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                  color: escuchando ? theme.colorScheme.error : theme.colorScheme.secondary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2.0,
                 ),
               ),
             ),
