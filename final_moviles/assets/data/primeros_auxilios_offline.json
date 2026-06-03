@@ -1,0 +1,110 @@
+[
+  {
+    "class_id": 0,
+    "condicion": "quemadura",
+    "prioridad": "Alta",
+    "pasos": [
+      "Enfriar la quemadura inmediatamente con agua corriente templada o fría durante al menos 10 a 20 minutos.",
+      "Quitar anillos, pulseras u objetos restrictivos de la zona afectada antes de que comience a inflamarse.",
+      "Cubrir la zona con una gasa estéril o un paño limpio y húmedo sin presionar.",
+      "No aplicar hielo directo, pasta de dientes, mantequilla ni aceites; eso solo destruye más tejido."
+    ],
+    "advertencias": [
+      "Nunca revientes las ampollas, actúan como barrera contra infecciones.",
+      "Si la piel está carbonizada o pegada a la ropa, no intentes retirarla por la fuerza."
+    ],
+    "buscar_emergencia": "Si la quemadura afecta cara, manos, genitales, es mayor al tamaño de la palma de la mano, o es química/eléctrica."
+  },
+  {
+    "class_id": 1,
+    "condicion": "herida_abierta",
+    "prioridad": "Alta",
+    "pasos": [
+      "Lavarse las manos antes de tocar la herida para evitar infecciones cruzadas.",
+      "Aplicar presión directa sobre la herida con una gasa limpia o paño para detener el sangrado.",
+      "Lavar la periferia de la herida con agua limpia y jabón neutro; eliminar la suciedad superficial si es posible.",
+      "Cubrir con un vendaje estéril o apósito limpio."
+    ],
+    "advertencias": [
+      "No apliques alcohol ni agua oxigenada directamente dentro de heridas profundas; retrasa la cicatrización.",
+      "No intentes extraer objetos grandes o profundamente incrustados; podrías empeorar la hemorragia."
+    ],
+    "buscar_emergencia": "Si los bordes están muy separados, no deja de sangrar tras 10 minutos de presión, o muestra signos de infección grave."
+  },
+  {
+    "class_id": 2,
+    "condicion": "erupcion_cutanea",
+    "prioridad": "Baja",
+    "pasos": [
+      "Lavar la zona suavemente con agua fría y jabón suave para eliminar posibles alérgenos o irritantes.",
+      "Aplicar compresas frías y húmedas para aliviar la picazón y reducir la inflamación local.",
+      "Mantener la zona aireada y evitar el uso de ropa ajustada o tejidos sintéticos que aumenten la fricción."
+    ],
+    "advertencias": [
+      "Evitar rascarse a toda costa; rompe la barrera cutánea e introduce bacterias.",
+      "No automedicarse con cremas antibióticas o corticoides sin un diagnóstico claro."
+    ],
+    "buscar_emergencia": "Si la erupción se propaga rápidamente, se acompaña de fiebre, dificultad para respirar o inflamación en la cara o garganta."
+  },
+  {
+    "class_id": 3,
+    "condicion": "moreton",
+    "prioridad": "Baja",
+    "pasos": [
+      "Aplicar una compresa fría o hielo envuelto en un paño sobre el área durante 10-15 minutos para reducir la inflamación.",
+      "Elevar la extremidad afectada por encima del nivel del corazón, si es posible, para disminuir la acumulación de sangre.",
+      "Mantener la zona en reposo relativo durante las primeras horas."
+    ],
+    "advertencias": [
+      "No apliques hielo directamente sobre la piel desnuda, puede causar quemadura por congelación.",
+      "No intentes drenar el hematoma pinchándolo bajo ninguna circunstancia."
+    ],
+    "buscar_emergencia": "Si el dolor es insoportable, la inflamación es desproporcionada, o aparece tras un golpe severo en la cabeza o el abdomen."
+  },
+  {
+    "class_id": 4,
+    "condicion": "trauma_ocular",
+    "prioridad": "Crítica",
+    "pasos": [
+      "En caso de partículas sueltas o químicos, enjuagar el ojo con abundante agua limpia o suero fisiológico durante al menos 15 minutos.",
+      "Cubrir el ojo afectado de forma holgada con un apósito limpio o un cono protector sin ejercer ninguna presión sobre el globo ocular.",
+      "Mantener ambos ojos lo más quietos posible: mover el ojo sano mueve el ojo lesionado."
+    ],
+    "advertencias": [
+      "Prohibido frotarse el ojo bajo cualquier circunstancia.",
+      "No intentes retirar objetos incrustados en el globo ocular; podrías causar ceguera permanente."
+    ],
+    "buscar_emergencia": "Todo trauma ocular mecánico, penetrante o químico requiere evaluación médica urgente inmediata."
+  },
+  {
+    "class_id": 5,
+    "condicion": "lesion_medica",
+    "prioridad": "Variable",
+    "pasos": [
+      "Evaluar el estado de conciencia y la respiración de la persona afectada.",
+      "Si se sospecha de fractura o lesión ósea, inmovilizar la zona en la posición en la que se encuentra.",
+      "Mantener a la persona abrigada y en una postura cómoda si la situación lo permite, evitando movimientos bruscos."
+    ],
+    "advertencias": [
+      "No muevas a una persona si sospechas lesión en el cuello o columna vertebral, salvo peligro de muerte inminente.",
+      "No le des comida ni bebida si existe la posibilidad de que requiera cirugía de urgencia."
+    ],
+    "buscar_emergencia": "Si hay pérdida de conocimiento, deformidad evidente, incapacidad para moverse o dolor extremo."
+  },
+  {
+    "class_id": 6,
+    "condicion": "sangre",
+    "prioridad": "Crítica",
+    "pasos": [
+      "Identificar el origen exacto del sangrado y aplicar presión firme y continua con un paño limpio o gasa.",
+      "Si el paño se empapa de sangre, no lo retires; coloca otro encima y sigue presionando.",
+      "Elevar la zona afectada si es una extremidad y no se sospecha de una fractura.",
+      "Si es una hemorragia masiva en una extremidad que pone en riesgo la vida y la presión no funciona, usar un torniquete 5-7 cm por encima de la herida."
+    ],
+    "advertencias": [
+      "No aflojes ni retires los apósitos empapados; destruirías los coágulos que el cuerpo intenta formar.",
+      "No uses torniquetes improvisados con cables o cuerdas delgadas que corten la piel."
+    ],
+    "buscar_emergencia": "Cualquier sangrado arterial (sangre roja brillante que sale a chorros) o hemorragia que no cese tras minutos de presión firme."
+  }
+]

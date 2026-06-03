@@ -1,0 +1,3 @@
+# Ignore RAG folder as requested
+RAG/
+tensorflow_lite/

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get/get.dart';
 
 import '../../../services/sintoma_service.dart';
@@ -217,10 +218,26 @@ class _DetalleSheet extends StatelessWidget {
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 1.0),
             ),
             const SizedBox(height: 10),
-            Text(
-              diagnostico.tratamiento,
-              style: const TextStyle(fontSize: 15, height: 1.7, color: Colors.white),
-            ),
+            Obx(() {
+              // Leer directamente del controller para que el sheet se actualice
+              // cuando llega la respuesta del LLM mientras está abierto.
+              final ctrl = Get.find<FirstAidController>();
+              final texto = ctrl.diagnostico.value?.tratamiento
+                  ?? diagnostico.tratamiento;
+              return MarkdownBody(
+                data: texto,
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(fontSize: 15, height: 1.7, color: Colors.white),
+                  strong: const TextStyle(fontSize: 15, height: 1.7, color: Colors.white, fontWeight: FontWeight.bold),
+                  em: const TextStyle(fontSize: 15, height: 1.7, color: Colors.white, fontStyle: FontStyle.italic),
+                  h1: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                  h2: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                  h3: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600),
+                  listBullet: const TextStyle(fontSize: 15, color: Colors.white),
+                  blockquote: const TextStyle(fontSize: 14, color: Colors.white70),
+                ),
+              );
+            }),
             const SizedBox(height: 32),
             Text(
               'ADVERTENCIA: Esta información es orientativa. Busque asistencia médica profesional inmediatamente si los síntomas persisten.',

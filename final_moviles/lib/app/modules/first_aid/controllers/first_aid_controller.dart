@@ -8,6 +8,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../../services/sintoma_service.dart';
 import '../../../../services/ml/yolo_wrapper.dart';
+import '../../../services/llm_service.dart';
 
 enum CameraEstado { inicial, cargando, lista, sinPermiso, error }
 
@@ -48,12 +49,15 @@ class FirstAidController extends GetxController {
   final hablando = false.obs;
   String _ultimoTextoHablado = '';
 
+  LlmService get _llm => Get.find<LlmService>();
+
   @override
   void onInit() {
     super.onInit();
     inicializar();
     _initTts();
     _yolo.inicializar();
+    _llm.init();
   }
 
   @override
@@ -70,6 +74,7 @@ class FirstAidController extends GetxController {
 
   Future<void> inicializar() async {
     estado.value = CameraEstado.cargando;
+    
     final permiso = await Permission.camera.request();
     if (!permiso.isGranted) {
       estado.value = CameraEstado.sinPermiso;
@@ -139,19 +144,27 @@ class FirstAidController extends GetxController {
 
       if (deteccion != null) {
         ultimaDeteccion.value = deteccion;
-        diagnostico.value = _diagDesdeDeteccion(deteccion);
-        //solo habla si cambia la lesion
+        //solo procesamos con LLM y hablamos si cambia la lesion
         if (deteccion.clase != _ultimaClaseHablada) {
           _ultimaClaseHablada = deteccion.clase;
           final claseLimpia = deteccion.clase.replaceAll('_', ' ');
+
+          _llm.limpiarHistorial(); // cada detección nueva es conversación nueva
+          diagnostico.value = Diagnostico(
+            causa: claseLimpia,
+            descripcion: 'Lesión detectada · Confianza: ${(deteccion.confianza * 100).toStringAsFixed(1)}%',
+            tratamiento: 'Consultando manuales…',
+            urgencia: 'alta',
+          );
           hablar(
             '$claseLimpia, confianza ${(deteccion.confianza * 100).toStringAsFixed(0)} por ciento',
           );
+          _generarSugerenciaLLM(claseLimpia, conHistorial: false);
         }
       } else {
         ultimaDeteccion.value = null;
-        diagnostico.value = null;
-        //no borra el ultimo hablado para no repetirse
+        // Mantenemos el diagnóstico y texto anterior en pantalla
+        // para que la UI no parpadee o desaparezca si pierde el frame un segundo.
       }
     } catch (_) {
     } finally {
@@ -159,21 +172,38 @@ class FirstAidController extends GetxController {
     }
   }
 
-  Diagnostico _diagDesdeDeteccion(YoloDetection d) {
-    final conf = (d.confianza * 100).toStringAsFixed(1);
-    final bb = d.boundingBox;
-    final claseLimpia = d.clase.replaceAll('_', ' ');
-    return Diagnostico(
-      causa: claseLimpia,
-      descripcion: 'Lesión detectada · Confianza: $conf%',
-      tratamiento:
-          'Clase: $claseLimpia\n'
-          'Confianza: $conf%\n'
-          'Bbox — x: ${bb.x.toStringAsFixed(3)}, y: ${bb.y.toStringAsFixed(3)}, '
-          'w: ${bb.ancho.toStringAsFixed(3)}, h: ${bb.alto.toStringAsFixed(3)}',
-      urgencia: 'baja',
-    );
+  // [conHistorial]=false para detecciones de cámara (pregunta fresca),
+  // [conHistorial]=true para el micrófono (mantiene hilo de conversación).
+  Future<void> _generarSugerenciaLLM(
+    String problema, {
+    bool conHistorial = false,
+  }) async {
+    final respuesta = await _llm.consultar(problema, conHistorial: conHistorial);
+    if (respuesta == null) return;
+
+    final d = diagnostico.value;
+    if (d != null) {
+      diagnostico.value = Diagnostico(
+        causa: d.causa,
+        descripcion: d.descripcion,
+        tratamiento: respuesta,
+        urgencia: d.urgencia,
+      );
+    }
+    hablar(_sinMarkdown(respuesta));
   }
+
+  // Elimina marcadores markdown para que el TTS lea texto limpio.
+  String _sinMarkdown(String texto) => texto
+      .replaceAll(RegExp(r'\*+'), '')
+      .replaceAll(RegExp(r'_+'), '')
+      .replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '')
+      .replaceAll(RegExp(r'^\s*[-•]\s+', multiLine: true), '')
+      .replaceAll(RegExp(r'^\s*\d+\.\s+', multiLine: true), '')
+      .replaceAll('`', '')
+      .replaceAll(RegExp(r'\[(.+?)\]\(.+?\)'), r'$1')
+      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+      .trim();
 
   //modo y tts
 
@@ -193,6 +223,7 @@ class FirstAidController extends GetxController {
     textoEscuchado.value = '';
     ultimaDeteccion.value = null;
     _ultimaClaseHablada = null;
+    _llm.limpiarHistorial();
     modo.value = nuevo;
     if (nuevo == Modo.camara) {
       _iniciarScanAutomatico();
@@ -267,10 +298,16 @@ class FirstAidController extends GetxController {
   Future<void> _procesarSintoma(String texto) async {
     await _detenerEscucha();
     analizando.value = true;
+    
     try {
-      final res = await sintomas.analizar(texto);
-      diagnostico.value = res;
-      await hablar('${res.causa}. ${res.tratamiento}');
+      diagnostico.value = Diagnostico(
+        causa: 'Consulta registrada',
+        descripcion: 'Analizando síntomas: "$texto"',
+        tratamiento: 'Generando procedimiento sugerido...',
+        urgencia: 'media',
+      );
+      
+      _generarSugerenciaLLM(texto, conHistorial: true);
     } catch (_) {
     } finally {
       analizando.value = false;
