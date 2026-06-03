@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
-import '../../../services/google_tts_service.dart';  
+import '../../../services/google_tts_service.dart';
 import '../../../services/sintoma_service.dart';
 import '../../../../services/ml/yolo_wrapper.dart';
 import '../../../services/llm_service.dart';
@@ -71,7 +71,7 @@ class FirstAidController extends GetxController {
 
   Future<void> inicializar() async {
     estado.value = CameraEstado.cargando;
-    
+
     final permiso = await Permission.camera.request();
     if (!permiso.isGranted) {
       estado.value = CameraEstado.sinPermiso;
@@ -114,7 +114,7 @@ class FirstAidController extends GetxController {
 
   void _iniciarScanAutomatico() {
     _escaneando = true;
-    if (_loopActivo) return; 
+    if (_loopActivo) return;
     _loopActivo = true;
     _loopScan();
   }
@@ -145,7 +145,7 @@ class FirstAidController extends GetxController {
           _ultimaClaseHablada = deteccion.clase;
           final claseLimpia = deteccion.clase.replaceAll('_', ' ');
 
-          _llm.limpiarHistorial(); // cada detección nueva es conversación nueva
+          _llm.limpiarHistorial();
           diagnostico.value = Diagnostico(
             causa: claseLimpia,
             descripcion: 'Lesión detectada · Confianza: ${(deteccion.confianza * 100).toStringAsFixed(1)}%',
@@ -167,8 +167,6 @@ class FirstAidController extends GetxController {
     }
   }
 
-  // [conHistorial]=false para detecciones de cámara (pregunta fresca),
-  // [conHistorial]=true para el micrófono (mantiene hilo de conversación).
   Future<void> _generarSugerenciaLLM(
     String problema, {
     bool conHistorial = false,
@@ -188,7 +186,6 @@ class FirstAidController extends GetxController {
     hablar(_sinMarkdown(respuesta));
   }
 
-  // Elimina marcadores markdown para que el TTS lea texto limpio.
   String _sinMarkdown(String texto) => texto
       .replaceAll(RegExp(r'\*+'), '')
       .replaceAll(RegExp(r'_+'), '')
@@ -202,7 +199,7 @@ class FirstAidController extends GetxController {
 
   Future<void> hablar(String texto) async {
     _ultimoTextoHablado = texto;
-    await _tts.speak(texto); // hablando driven by playingStream
+    await _tts.speak(texto);
   }
 
   Future<void> pararAudio() async => _tts.stop();
@@ -214,7 +211,6 @@ class FirstAidController extends GetxController {
       await hablar(_ultimoTextoHablado);
     }
   }
-
 
   void cambiarModo(Modo nuevo) {
     if (modo.value == nuevo) return;
@@ -235,7 +231,6 @@ class FirstAidController extends GetxController {
 
   Future<void> toggleEscucha() async {
     if (escuchando.value) {
-      // El usuario frena la grabación, así procesamos
       final texto = textoEscuchado.value;
       await _detenerEscucha();
       if (texto.isNotEmpty) _procesarSintoma(texto);
@@ -280,7 +275,7 @@ class FirstAidController extends GetxController {
   Future<void> _procesarSintoma(String texto) async {
     await _detenerEscucha();
     analizando.value = true;
-    
+
     try {
       diagnostico.value = Diagnostico(
         causa: 'Consulta registrada',
@@ -288,7 +283,7 @@ class FirstAidController extends GetxController {
         tratamiento: 'Generando procedimiento sugerido...',
         urgencia: 'media',
       );
-      
+
       _generarSugerenciaLLM(texto, conHistorial: true);
     } catch (_) {
     } finally {
