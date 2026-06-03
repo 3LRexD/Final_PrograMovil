@@ -12,36 +12,44 @@ class GoogleTtsService {
   static final GoogleTtsService instance = GoogleTtsService._();
 
   final _player = AudioPlayer();
-  bool _playing = false;
+  // Token incremented on every speak() call. Each in-flight call checks its own
+  // token before each async step and aborts if a newer call has taken over.
+  int _token = 0;
+
+  Stream<bool> get playingStream => _player.playingStream;
 
   static const _url =
       'https://texttospeech.googleapis.com/v1/text:synthesize';
 
   static const _voice = {
     'languageCode': 'es-ES',
-    'name': 'es-ES-Chirp3-HD-Aoede', 
+    'name': 'es-ES-Chirp3-HD-Aoede',
   };
 
   Future<void> speak(String texto) async {
     if (texto.isEmpty) return;
-    await stop();
+    final myToken = ++_token;
+
+    await _player.stop();
+    if (myToken != _token) return;
 
     try {
       final audioBytes = await _synthesize(texto);
-      if (audioBytes == null) return;
+      if (myToken != _token) return; // superseded during synthesis
 
+      if (audioBytes == null) return;
       final file = await _guardarTemporal(audioBytes);
+      if (myToken != _token) return; // superseded during file write
+
       await _reproducir(file);
     } catch (e) {
-      debugPrint('❌ GoogleTtsService.speak error: $e');
+      debugPrint('GoogleTtsService.speak error: $e');
     }
   }
 
   Future<void> stop() async {
-    if (_playing) {
-      await _player.stop();
-      _playing = false;
-    }
+    ++_token; // cancel any in-flight speak()
+    await _player.stop();
   }
 
   Future<Uint8List?> _synthesize(String texto) async {
@@ -85,10 +93,15 @@ class GoogleTtsService {
   }
 
   Future<void> _reproducir(File file) async {
-    _playing = true;
     await _player.setFilePath(file.path);
     await _player.play();
-    _playing = false;
+    // play() returns when playback starts, not when it ends.
+    // Wait until the player stops (completed or stopped by stop()).
+    await _player.playerStateStream.firstWhere(
+      (s) =>
+          s.processingState == ProcessingState.completed ||
+          s.processingState == ProcessingState.idle,
+    );
   }
 
   Future<void> dispose() async {
