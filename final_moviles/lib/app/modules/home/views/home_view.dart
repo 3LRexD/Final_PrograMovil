@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../theme/app_theme.dart';
+import '../../onboarding/controllers/onboarding_controller.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/tips_carousel.dart';
@@ -68,18 +69,47 @@ class _HeroSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.local_hospital_rounded,
-                  color: Colors.white,
-                  size: 40,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Ícono principal (sin cambios)
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.local_hospital_rounded,
+                      color: Colors.white,
+                      size: 40,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  Tooltip(
+                    message: 'Ver tutorial',
+                    child: InkWell(
+                      onTap: OnboardingController.resetOnboarding,
+                      borderRadius: BorderRadius.circular(30),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.help_outline_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
+
               const SizedBox(height: 20),
               const Text(
                 'Asistente de\nEmergencias',

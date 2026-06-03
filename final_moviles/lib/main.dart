@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:get_storage/get_storage.dart';
+import 'app/modules/onboarding/controllers/onboarding_controller.dart'; 
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
 import 'app/theme/app_theme.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const AsistenteApp());
+  
+  await GetStorage.init();
+
+  runApp(const AsistenteApp()); 
 }
 
 class AsistenteApp extends StatelessWidget {
@@ -15,12 +19,15 @@ class AsistenteApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String rutaInicial = OnboardingController.shouldShowOnboarding()
+        ? AppRoutes.onboarding
+        : AppRoutes.home;
     return GetMaterialApp(
       title: 'Asistente de Emergencias',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      initialRoute: AppRoutes.home,
-      getPages: AppPages.pages,
+      theme: AppTheme.light, 
+      initialRoute: rutaInicial, 
+      getPages: AppPages.pages, 
     );
   }
 }
