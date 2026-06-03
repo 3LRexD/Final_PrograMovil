@@ -3,52 +3,52 @@ import 'package:get/get.dart';
 
 import '../controllers/first_aid_controller.dart';
 
-class MicPanel extends StatefulWidget {
-  const MicPanel({super.key, required this.controller});
-
-  final FirstAidController controller;
-
-  @override
-  State<MicPanel> createState() => _MicPanelState();
-}
-
-class _MicPanelState extends State<MicPanel>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-  late final Animation<double> _scale;
+class MicPanelController extends GetxController
+    with GetSingleTickerProviderStateMixin {
+  late final AnimationController pulse;
+  late final Animation<double> scale;
 
   @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
+  void onInit() {
+    super.onInit();
+    pulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 750),
     )..repeat(reverse: true);
-    _scale = Tween<double>(begin: 0.92, end: 1.1).animate(
-      CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+    scale = Tween<double>(begin: 0.92, end: 1.1).animate(
+      CurvedAnimation(parent: pulse, curve: Curves.easeInOut),
     );
   }
 
   @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
+  void onClose() {
+    pulse.dispose();
+    super.onClose();
   }
+}
+
+class MicPanel extends StatelessWidget {
+  MicPanel({super.key, required this.controller});
+
+  final FirstAidController controller;
+  final micController = Get.put(MicPanelController());
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Obx(() {
-        final escuchando = widget.controller.escuchando.value;
-        final analizando = widget.controller.analizando.value;
+        final escuchando = controller.escuchando.value;
+        final analizando = controller.analizando.value;
 
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             GestureDetector(
-              onTap: analizando ? null : widget.controller.toggleEscucha,
+              onTap: analizando ? null : controller.toggleEscucha,
               child: ScaleTransition(
-                scale: escuchando ? _scale : const AlwaysStoppedAnimation(1.0),
+                scale: escuchando
+                    ? micController.scale
+                    : const AlwaysStoppedAnimation(1.0),
                 child: Container(
                   width: 84,
                   height: 84,

@@ -54,7 +54,7 @@ class FirstAidView extends GetView<FirstAidController> {
     final cam = controller.cameraController!;
     final topInset = MediaQuery.of(context).viewPadding.top + kToolbarHeight;
 
-    //cambia layout completo segun modo
+    //cambia layout completo segun el modo
     return Obx(() {
       if (controller.modo.value == Modo.microfono) {
         return ColoredBox(
@@ -120,7 +120,7 @@ class FirstAidView extends GetView<FirstAidController> {
               ),
             );
           }),
-          //detector de presion larga encima del scanner, debajo del panel
+          //detector de presion larga encima del scanner debajo del panel
           Positioned(
             top: 0,
             bottom: 220,
@@ -143,7 +143,7 @@ class FirstAidView extends GetView<FirstAidController> {
   }
 }
 
-//appbar que cambia color segun modo
+//appbar cambia de color segun el modo
 class _AppBarReactivo extends StatelessWidget implements PreferredSizeWidget {
   const _AppBarReactivo({required this.controller});
 
@@ -199,7 +199,7 @@ class _BottomPanel extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          //tarjeta de diagnostico + boton de parar audio
+          //tarjeta de diagnostico y boton para parar el audio
           Obx(() {
             final d = controller.diagnostico.value;
             if (d == null) return const SizedBox.shrink();

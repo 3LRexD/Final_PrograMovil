@@ -15,10 +15,10 @@ class Diagnostico {
   final String causa;
   final String descripcion;
   final String tratamiento;
-  final String urgencia; // 'baja' | 'media' | 'alta'
+  final String urgencia; //baja o media o alta
 }
 
-//mock para probar la ui - siempre regresa infeccion estomacal
+//mock para probar la ui siempre regresa infeccion estomacal
 class MockSintomaService implements SintomaService {
   @override
   Future<Diagnostico> analizar(String descripcion) async {

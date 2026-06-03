@@ -1,7 +1,7 @@
-# YOLOv8 First Aid Detection Model Configuration
-# Created: 2024-11-15
-# Framework: PyTorch 2.0+
-# CUDA Version: 11.8+
+#configuracion del modelo de primeros auxilios yolo v8
+#creado el 2024 11 15
+#framework pytorch 20
+#cuda 118
 
 model:
   architecture: "YOLOv8"

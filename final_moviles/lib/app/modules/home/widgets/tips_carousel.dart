@@ -1,17 +1,44 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class TipsCarousel extends StatefulWidget {
-  const TipsCarousel({super.key});
+class TipsCarouselController extends GetxController {
+  late final PageController pageController;
+  Timer? _timer;
+
+  static const int virtualCount = 14 * 1000;
+  static const int initialPage = 14 * 500;
 
   @override
-  State<TipsCarousel> createState() => _TipsCarouselState();
+  void onInit() {
+    super.onInit();
+    pageController = PageController(
+      initialPage: initialPage,
+      viewportFraction: 0.88,
+    );
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (pageController.hasClients) {
+        pageController.nextPage(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void onClose() {
+    _timer?.cancel();
+    pageController.dispose();
+    super.onClose();
+  }
 }
 
-class _TipsCarouselState extends State<TipsCarousel> {
-  late final PageController _pageController;
-  Timer? _timer;
+class TipsCarousel extends StatelessWidget {
+  TipsCarousel({super.key});
+
+  final controller = Get.put(TipsCarouselController());
 
   static const _tips = <_Tip>[
     _Tip(
@@ -114,31 +141,6 @@ class _TipsCarouselState extends State<TipsCarousel> {
     ),
   ];
 
-  static final int _virtualCount = _tips.length * 1000;
-  static final int _initialPage = _tips.length * 500;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(
-      initialPage: _initialPage,
-      viewportFraction: 0.88,
-    );
-    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _pageController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -154,8 +156,8 @@ class _TipsCarouselState extends State<TipsCarousel> {
         SizedBox(
           height: 130,
           child: PageView.builder(
-            controller: _pageController,
-            itemCount: _virtualCount,
+            controller: controller.pageController,
+            itemCount: TipsCarouselController.virtualCount,
             itemBuilder: (context, i) =>
                 _TipCard(tip: _tips[i % _tips.length]),
           ),
