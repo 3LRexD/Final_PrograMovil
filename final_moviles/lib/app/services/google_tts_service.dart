@@ -19,7 +19,7 @@ class GoogleTtsService {
 
   static const _voice = {
     'languageCode': 'es-ES',
-    'name': 'es-ES-Neural2-A', 
+    'name': 'es-ES-Chirp3-HD-Aoede', 
   };
 
   Future<void> speak(String texto) async {

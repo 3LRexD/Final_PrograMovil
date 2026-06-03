@@ -13,7 +13,6 @@ enum CameraEstado { inicial, cargando, lista, sinPermiso, error }
 
 enum Modo { camara, microfono }
 
-
 class FirstAidController extends GetxController {
   FirstAidController({required this.sintomas});
 
@@ -105,10 +104,9 @@ class FirstAidController extends GetxController {
 
   Future<void> abrirAjustes() => openAppSettings();
 
-  //escaneo continuo procesa frame por frame segun la velocidad del dispositivo
   void _iniciarScanAutomatico() {
     _escaneando = true;
-    if (_loopActivo) return;//ya hay un loop corriendo
+    if (_loopActivo) return; 
     _loopActivo = true;
     _loopScan();
   }
@@ -130,15 +128,12 @@ class FirstAidController extends GetxController {
     try {
       final foto = await cameraController!.takePicture();
       final bytes = await foto.readAsBytes();
-      //el modelo corre en isolate para no trabar la ui
       final deteccion = await _yolo.detectarLesion(bytes);
-      //borra el archivo temporal para que no llene el disco
       File(foto.path).delete().ignore();
 
       if (deteccion != null) {
         ultimaDeteccion.value = deteccion;
         diagnostico.value = _diagDesdeDeteccion(deteccion);
-        //solo habla si cambia la lesion
         if (deteccion.clase != _ultimaClaseHablada) {
           _ultimaClaseHablada = deteccion.clase;
           final claseLimpia = deteccion.clase.replaceAll('_', ' ');
@@ -149,7 +144,6 @@ class FirstAidController extends GetxController {
       } else {
         ultimaDeteccion.value = null;
         diagnostico.value = null;
-        //no borra el ultimo hablado para no repetirse
       }
     } catch (_) {
     } finally {
@@ -173,21 +167,32 @@ class FirstAidController extends GetxController {
     );
   }
 
-  Future<void> hablar(String texto) => _tts.speak(texto);
-  Future<void> pararAudio() => _tts.stop();
-  Future<void> _initTts() async {
-    await _tts.setLanguage('es-MX');
-    await _tts.setSpeechRate(0.45);
-    await _tts.setPitch(1.0);
-    _tts.setStartHandler(() => hablando.value = true);
-    _tts.setCompletionHandler(() => hablando.value = false);
-    _tts.setCancelHandler(() => hablando.value = false);
+
+  Future<void> hablar(String texto) async {
+    hablando.value = true;
+    _ultimoTextoHablado = texto;
+    await _tts.speak(texto);
+    hablando.value = false; 
   }
+
+  Future<void> pararAudio() async {
+    await _tts.stop();
+    hablando.value = false;
+  }
+
+  Future<void> toggleAudio() async {
+    if (hablando.value) {
+      await pararAudio();
+    } else if (_ultimoTextoHablado.isNotEmpty) {
+      await hablar(_ultimoTextoHablado);
+    }
+  }
+
 
   void cambiarModo(Modo nuevo) {
     if (modo.value == nuevo) return;
     if (escuchando.value) _detenerEscucha();
-    _tts.stop();
+    pararAudio();
     diagnostico.value = null;
     textoEscuchado.value = '';
     ultimaDeteccion.value = null;
@@ -200,26 +205,9 @@ class FirstAidController extends GetxController {
     }
   }
 
-  Future<void> hablar(String texto) async {
-    _ultimoTextoHablado = texto;
-    await _tts.speak(texto);
-  }
-
-  Future<void> pararAudio() async => _tts.stop();
-
-  Future<void> toggleAudio() async {
-    if (hablando.value) {
-      await _tts.stop();
-    } else if (_ultimoTextoHablado.isNotEmpty) {
-      await hablar(_ultimoTextoHablado);
-    }
-  }
-
-  //microfono
-
   Future<void> toggleEscucha() async {
     if (escuchando.value) {
-      //el usuario frena la grabacion asi procesamos
+      // El usuario frena la grabación, así procesamos
       final texto = textoEscuchado.value;
       await _detenerEscucha();
       if (texto.isNotEmpty) _procesarSintoma(texto);
@@ -232,7 +220,6 @@ class FirstAidController extends GetxController {
     if (!_sttListo) {
       _sttListo = await _stt.initialize(
         onStatus: (status) {
-          //si se apaga por silencio actualiza el estado
           if ((status == 'done' || status == 'notListening') &&
               escuchando.value) {
             escuchando.value = false;
@@ -248,7 +235,6 @@ class FirstAidController extends GetxController {
     await _stt.listen(
       onResult: (result) {
         textoEscuchado.value = result.recognizedWords;
-        //no procesa aca el usuario tiene que tocar de nuevo
       },
       listenOptions: SpeechListenOptions(
         localeId: 'es-MX',
@@ -269,7 +255,7 @@ class FirstAidController extends GetxController {
     try {
       final res = await sintomas.analizar(texto);
       diagnostico.value = res;
-      await hablar('${res.causa}. ${res.tratamiento}');  // ← Google TTS
+      await hablar('${res.causa}. ${res.tratamiento}');
     } catch (_) {
     } finally {
       analizando.value = false;
